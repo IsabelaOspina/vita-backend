@@ -15,7 +15,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
     private final UsuarioRepository usuarioRepository;
 
-    // Spring Security llama a este método al autenticar; aquí el "username" es el correo
+    // Spring Security llama a este metodo al autenticar; aquí el "username" es el correo.
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         Usuario usuario = usuarioRepository.findByCorreo(email)
@@ -24,7 +24,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         return User.builder()
                 .username(usuario.getCorreo())
                 .password(usuario.getContrasena())
-                .roles("USER")
+                .roles(usuario.getRol().name()) // genera la autoridad ROLE_ADMIN o ROLE_USUARIO
                 .disabled(!Boolean.TRUE.equals(usuario.getActivo()))
                 .build();
     }

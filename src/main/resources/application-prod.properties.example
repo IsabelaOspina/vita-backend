@@ -9,3 +9,9 @@ spring.jpa.database-platform=org.hibernate.dialect.MySQLDialect
 spring.jpa.hibernate.ddl-auto=update
 spring.jpa.show-sql=true
 spring.jpa.properties.hibernate.format_sql=true
+
+# Administrador del sistema (se crea solo al arrancar si no existe)
+vita.admin.correo=admin@vita.com
+vita.admin.contrasena=CAMBIA_ESTA_CLAVE
+vita.admin.nombre=Administrador VITA
+vita.admin.cedula=0000000000

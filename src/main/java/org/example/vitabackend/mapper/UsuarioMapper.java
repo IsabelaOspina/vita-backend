@@ -20,6 +20,7 @@ public interface UsuarioMapper {
     // La configuración de accesibilidad la arma ConfiguracionAccesibilidadFactory en el servicio
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "activo", ignore = true)
+    @Mapping(target = "rol", ignore = true)
     @Mapping(target = "configuracionAccesibilidad", ignore = true)
     Usuario toEntity(UsuarioRequest request);
 

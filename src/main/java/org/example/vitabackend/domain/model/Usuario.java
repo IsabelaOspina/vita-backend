@@ -5,6 +5,10 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.*;
+import org.example.vitabackend.domain.enums.Rol;
+import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 @Getter
 @Setter
@@ -39,6 +43,15 @@ public class Usuario {
 
     @Builder.Default
     private Boolean activo = true;
+
+    // Se guarda como VARCHAR (no como ENUM de MySQL) para poder agregar roles sin alterar la columna.
+    // El default evita que las filas que ya existían queden sin rol al actualizar el esquema.
+    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
+    @Column(nullable = false, length = 20)
+    @ColumnDefault("'USUARIO'")
+    @Builder.Default
+    private Rol rol = Rol.USUARIO;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "contacto_emergencia_id")
