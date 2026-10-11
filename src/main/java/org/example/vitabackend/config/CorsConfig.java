@@ -20,20 +20,23 @@ public class CorsConfig {
 
         CorsConfiguration config = new CorsConfiguration();
 
-        //Frontend permitido
-        config.setAllowedOrigins(List.of(allowedOrigins));
+        config.setAllowedOrigins(
+                List.of(allowedOrigins.split("\\s*,\\s*"))
+        );
 
-        //Métodos HTTP permitidos
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        config.setAllowedMethods(
+                List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
+        );
 
-        //Headers permitidos
         config.setAllowedHeaders(List.of("*"));
 
-        //Permitir credenciales
         config.setAllowCredentials(true);
 
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        UrlBasedCorsConfigurationSource source =
+                new UrlBasedCorsConfigurationSource();
+
         source.registerCorsConfiguration("/**", config);
+
         return source;
     }
 }
