@@ -9,5 +9,4 @@ public class VitaBackendApplication {
     public static void main(String[] args) {
         SpringApplication.run(VitaBackendApplication.class, args);
     }
-
 }
