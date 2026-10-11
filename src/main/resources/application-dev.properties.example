@@ -11,6 +11,7 @@ spring.jpa.show-sql=true
 spring.jpa.properties.hibernate.format_sql=true
 
 # Administrador del sistema (se crea solo al arrancar si no existe)
+Prueba
 vita.admin.correo=admin@vita.com
 vita.admin.contrasena=CAMBIA_ESTA_CLAVE
 vita.admin.nombre=Administrador VITA
