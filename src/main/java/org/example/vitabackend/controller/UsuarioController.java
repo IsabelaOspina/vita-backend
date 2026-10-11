@@ -1,5 +1,5 @@
 package org.example.vitabackend.controller;
-
+import org.springframework.security.core.Authentication;
 import org.example.vitabackend.dto.request.UsuarioRequest;
 import org.example.vitabackend.dto.response.UsuarioResponse;
 import org.example.vitabackend.service.UsuarioService;
@@ -20,6 +20,11 @@ public class UsuarioController {
     @ResponseStatus(HttpStatus.CREATED)
     public UsuarioResponse crear(@Valid @RequestBody UsuarioRequest request) {
         return usuarioService.crear(request);
+    }
+
+    @GetMapping("/me")
+    public UsuarioResponse perfil(Authentication authentication) {
+        return usuarioService.obtenerPorCorreo(authentication.getName());
     }
 
     @GetMapping("/{id}")

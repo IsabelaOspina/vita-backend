@@ -13,4 +13,6 @@ public interface UsuarioService {
     List<UsuarioResponse> listar();
 
     void desactivar(Long id);
+
+    UsuarioResponse obtenerPorCorreo(String correo);
 }

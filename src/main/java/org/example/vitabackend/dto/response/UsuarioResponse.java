@@ -1,6 +1,7 @@
 package org.example.vitabackend.dto.response;
 
 import java.time.LocalDate;
+import java.util.List;
 
 public record UsuarioResponse(
         Long id,
@@ -10,6 +11,8 @@ public record UsuarioResponse(
         String telefono,
         LocalDate fechaNacimiento,
         String direccion,
-        Boolean activo) {
+        Boolean activo,
+        ContactoEmergenciaResponse contactoEmergencia,
+        List<DiscapacidadResponse> discapacidades,
+        ConfiguracionAccesibilidadResponse configuracionAccesibilidad) {
 }
-

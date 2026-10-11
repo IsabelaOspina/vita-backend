@@ -1,18 +1,11 @@
 server.port=8080
-spring.application.name=vita-backend
 
 spring.datasource.url=jdbc:mysql://localhost:3306/vita?createDatabaseIfNotExist=true&serverTimezone=America/Bogota&allowPublicKeyRetrieval=true&useSSL=false
-spring.datasource.username=TU_USUARIO_MYSQL
-spring.datasource.password=TU_PASSWORD_MYSQL
+spring.datasource.username=TUUSERNAME
+spring.datasource.password=TUPASSWORD
 spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
 spring.jpa.database-platform=org.hibernate.dialect.MySQLDialect
 
 spring.jpa.hibernate.ddl-auto=update
 spring.jpa.show-sql=true
 spring.jpa.properties.hibernate.format_sql=true
-
-vita.jwt.secret=clave-supersecreta-para-vita-asistente-virtual-de-salud-uniquindio-2026-ingenieria-de-software-iii
-vita.jwt.expiration-ms=900000
-
-# Expo web (en Expo Go no se envía Origin)
-vita.cors.allowed-origins=http://localhost:8081,http://localhost:19006
