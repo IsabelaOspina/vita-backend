@@ -64,4 +64,8 @@ public class Usuario {
     @OneToOne(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
     private ConfiguracionAccesibilidad configuracionAccesibilidad;
 
+    // Solo para PERSONAL_SALUD. Es el lado inverso de la relación: no agrega columnas a la tabla usuario.
+    @OneToOne(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
+    private PersonalSalud personalSalud;
+
 }

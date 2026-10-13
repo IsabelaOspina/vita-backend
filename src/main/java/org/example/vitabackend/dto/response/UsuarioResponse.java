@@ -16,5 +16,6 @@ public record UsuarioResponse(
         Rol rol,
         ContactoEmergenciaResponse contactoEmergencia,
         List<DiscapacidadResponse> discapacidades,
-        ConfiguracionAccesibilidadResponse configuracionAccesibilidad) {
+        ConfiguracionAccesibilidadResponse configuracionAccesibilidad,
+        PersonalSaludResponse personalSalud) {
 }

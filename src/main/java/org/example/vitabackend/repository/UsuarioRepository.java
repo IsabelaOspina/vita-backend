@@ -1,5 +1,6 @@
 package org.example.vitabackend.repository;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.example.vitabackend.domain.enums.Rol;
@@ -13,4 +14,5 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
     boolean existsByCorreo(String correo);
     boolean existsByCedula(String cedula);
     boolean existsByRol(Rol rol);
+    List<Usuario> findByRol(Rol rol);
 }
