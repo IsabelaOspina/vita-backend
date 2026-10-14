@@ -50,6 +50,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(a -> a
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/error").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/usuarios").permitAll()
                         // Cada usuario puede ver su propio perfil
                         .requestMatchers(HttpMethod.GET, "/api/usuarios/me").authenticated()
@@ -60,6 +61,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/usuarios", "/api/usuarios/*").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/usuarios/*").hasRole("ADMIN")
+                        // Seguimiento de síntomas: solo pacientes, sobre sus propios datos
+                        .requestMatchers("/api/sintomas/**").hasRole("USUARIO")
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
