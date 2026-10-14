@@ -6,6 +6,7 @@ import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -34,6 +35,12 @@ public class GlobalExceptionHandler {
         Map<String, Object> body = base(HttpStatus.BAD_REQUEST, "Datos inválidos");
         body.put("errores", errores);
         return ResponseEntity.badRequest().body(body);
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<Map<String, Object>> accesoDenegado(AccessDeniedException ex) {
+        return build(HttpStatus.FORBIDDEN, ex.getMessage() != null && !ex.getMessage().equals("Access Denied")
+                ? ex.getMessage() : "No tiene permisos para realizar esta acción");
     }
 
     @ExceptionHandler(DisabledException.class)
