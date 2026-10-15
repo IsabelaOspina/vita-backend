@@ -11,4 +11,8 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface RecordatorioRepository extends JpaRepository<Recordatorio, Long> {
     List<Recordatorio> findByEstadoAndFechaHoraBefore(EstadoRecordatorio estado, LocalDateTime fecha);
+
+    /** Busca recordatorios pendientes futuros que deben cancelarse junto con una actividad. */
+    List<Recordatorio> findByActividadSalud_IdAndEstadoAndFechaHoraAfter(
+            Long actividadSaludId, EstadoRecordatorio estado, LocalDateTime fecha);
 }
