@@ -89,7 +89,7 @@ public class ActividadSaludServiceImpl implements ActividadSaludService {
         return listarPorPeriodo(correoAutenticado, desde, desde.plusDays(1));
     }
 
-    /** Consulta la semana ISO (lunes a lunes, fin exclusivo) que contiene la fecha. */
+    /** Consulta la semana (lunes a lunes, fin exclusivo) que contiene la fecha. */
     @Override
     public List<ActividadSaludResponse> listarPorSemana(String correoAutenticado, LocalDate fecha) {
         if (fecha == null) {
@@ -170,6 +170,10 @@ public class ActividadSaludServiceImpl implements ActividadSaludService {
             actividad.setEstado(EstadoActividad.COMPLETADA);
             actividad = actividadSaludRepository.save(actividad);
         }
+
+        // Una actividad ya completada no debe seguir generando avisos pendientes.
+        // Los recordatorios ya enviados/confirmados se conservan para trazabilidad.
+        cancelarRecordatoriosPendientesFuturos(actividad.getId());
         return actividadSaludMapper.toResponse(actividad);
     }
 
@@ -193,9 +197,17 @@ public class ActividadSaludServiceImpl implements ActividadSaludService {
         actividad.setEstado(EstadoActividad.CANCELADA);
         actividadSaludRepository.save(actividad);
 
+        cancelarRecordatoriosPendientesFuturos(actividad.getId());
+    }
+
+    /**
+     * Cancela solo los avisos pendientes con fecha futura para que el dispositivo pueda
+     * reconciliar su agenda local. Los enviados, confirmados y cancelados se conservan.
+     */
+    private void cancelarRecordatoriosPendientesFuturos(Long actividadId) {
         List<Recordatorio> pendientesFuturos = recordatorioRepository
                 .findByActividadSalud_IdAndEstadoAndFechaHoraAfter(
-                        actividad.getId(), EstadoRecordatorio.PENDIENTE, LocalDateTime.now(ZONA_VITA));
+                        actividadId, EstadoRecordatorio.PENDIENTE, LocalDateTime.now(ZONA_VITA));
         if (!pendientesFuturos.isEmpty()) {
             pendientesFuturos.forEach(recordatorio -> recordatorio.setEstado(EstadoRecordatorio.CANCELADO));
             recordatorioRepository.saveAll(pendientesFuturos);
