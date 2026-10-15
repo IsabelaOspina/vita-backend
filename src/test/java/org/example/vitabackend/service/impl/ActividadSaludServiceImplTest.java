@@ -243,4 +243,28 @@ class ActividadSaludServiceImplTest {
         verify(recordatorioRepository, never()).saveAll(any());
         assertTrue(actividad.getEstado() == EstadoActividad.CANCELADA);
     }
+    @Test
+    void crear_RechazaFechaAnteriorAlMomentoActual() {
+        request = new ActividadSaludRequest(
+                "Control atrasado", TipoActividad.CITA_MEDICA,
+                LocalDateTime.now().minusMinutes(1), "Hospital", "Prueba");
+        when(usuarioRepository.findByCorreo(CORREO)).thenReturn(Optional.of(usuario));
+
+        assertThrows(BusinessException.class, () -> service.crear(CORREO, request));
+        verify(actividadSaludRepository, never()).save(any(ActividadSalud.class));
+    }
+
+    @Test
+    void actualizar_RechazaFechaAnteriorAlMomentoActual() {
+        when(usuarioRepository.findByCorreo(CORREO)).thenReturn(Optional.of(usuario));
+        when(actividadSaludRepository.findByIdAndUsuario_Id(ACTIVIDAD_ID, USUARIO_ID))
+                .thenReturn(Optional.of(actividad));
+        request = new ActividadSaludRequest(
+                "Cita", TipoActividad.CITA_MEDICA,
+                LocalDateTime.now().minusMinutes(1), "Hospital", "Prueba");
+
+        assertThrows(BusinessException.class, () -> service.actualizar(CORREO, ACTIVIDAD_ID, request));
+        verify(actividadSaludMapper, never()).actualizarDesdeRequest(any(), any());
+    }
+
 }

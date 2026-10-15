@@ -36,6 +36,8 @@ public class ActividadSalud {
     @Builder.Default
     private EstadoActividad estado = EstadoActividad.PENDIENTE;
 
+    private LocalDateTime fechaHoraCumplimiento;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "usuario_id", nullable = false)
     private Usuario usuario;

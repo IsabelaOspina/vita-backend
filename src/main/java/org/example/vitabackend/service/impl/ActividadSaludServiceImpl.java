@@ -44,6 +44,7 @@ public class ActividadSaludServiceImpl implements ActividadSaludService {
     @Transactional
     public ActividadSaludResponse crear(String correoAutenticado, ActividadSaludRequest request) {
         Usuario usuario = obtenerUsuarioAutenticado(correoAutenticado);
+        validarFechaHoraFutura(request.fechaHora());
         ActividadSalud actividad = actividadSaludMapper.toEntity(request);
         actividad.setUsuario(usuario);
         actividad.setEstado(EstadoActividad.PENDIENTE);
@@ -137,6 +138,8 @@ public class ActividadSaludServiceImpl implements ActividadSaludService {
         Usuario usuario = obtenerUsuarioAutenticado(correoAutenticado);
         ActividadSalud actividad = buscarActividadPropia(actividadId, usuario.getId());
 
+        validarFechaHoraFutura(request.fechaHora());
+
         if (actividad.getEstado() == EstadoActividad.CANCELADA) {
             throw new BusinessException("No se puede modificar una actividad cancelada");
         }
@@ -144,13 +147,15 @@ public class ActividadSaludServiceImpl implements ActividadSaludService {
         LocalDateTime fechaHoraAnterior = actividad.getFechaHora();
         actividadSaludMapper.actualizarDesdeRequest(request, actividad);
         if (!fechaHoraAnterior.equals(actividad.getFechaHora())) {
-            // Los recordatorios absoletos ya no son fiables tras cambiar fecha/hora de la actividad.
-            // Se cancelan los pendientes futuros y el móvil puede crear nuevos con los datos actualizados.
+            // Conserva la anticipación configurada: si la cita se mueve 90 minutos,
+            // los recordatorios pendientes también se desplazan 90 minutos.
+            java.time.Duration desplazamiento = java.time.Duration.between(
+                    fechaHoraAnterior, actividad.getFechaHora());
             List<Recordatorio> recordatoriosFuturos = recordatorioRepository
                     .findByActividadSalud_IdAndEstadoAndFechaHoraAfter(
                             actividad.getId(), EstadoRecordatorio.PENDIENTE, LocalDateTime.now(ZONA_VITA));
             if (!recordatoriosFuturos.isEmpty()) {
-                recordatoriosFuturos.forEach(r -> r.setEstado(EstadoRecordatorio.CANCELADO));
+                recordatoriosFuturos.forEach(r -> r.setFechaHora(r.getFechaHora().plus(desplazamiento)));
                 recordatorioRepository.saveAll(recordatoriosFuturos);
             }
         }
@@ -168,12 +173,17 @@ public class ActividadSaludServiceImpl implements ActividadSaludService {
         }
         if (actividad.getEstado() != EstadoActividad.COMPLETADA) {
             actividad.setEstado(EstadoActividad.COMPLETADA);
+            actividad.setFechaHoraCumplimiento(LocalDateTime.now(ZONA_VITA));;
+            
+            List<Recordatorio> recordatoriosFuturos = recordatorioRepository
+                    .findByActividadSalud_IdAndEstadoAndFechaHoraAfter(
+                            actividad.getId(), EstadoRecordatorio.PENDIENTE, LocalDateTime.now(ZONA_VITA));
+            if (!recordatoriosFuturos.isEmpty()) {
+                recordatoriosFuturos.forEach(r -> r.setEstado(EstadoRecordatorio.CANCELADO));
+                recordatorioRepository.saveAll(recordatoriosFuturos);
+            }
             actividad = actividadSaludRepository.save(actividad);
         }
-
-        // Una actividad ya completada no debe seguir generando avisos pendientes.
-        // Los recordatorios ya enviados/confirmados se conservan para trazabilidad.
-        cancelarRecordatoriosPendientesFuturos(actividad.getId());
         return actividadSaludMapper.toResponse(actividad);
     }
 
@@ -197,20 +207,25 @@ public class ActividadSaludServiceImpl implements ActividadSaludService {
         actividad.setEstado(EstadoActividad.CANCELADA);
         actividadSaludRepository.save(actividad);
 
-        cancelarRecordatoriosPendientesFuturos(actividad.getId());
-    }
-
-    /**
-     * Cancela solo los avisos pendientes con fecha futura para que el dispositivo pueda
-     * reconciliar su agenda local. Los enviados, confirmados y cancelados se conservan.
-     */
-    private void cancelarRecordatoriosPendientesFuturos(Long actividadId) {
         List<Recordatorio> pendientesFuturos = recordatorioRepository
                 .findByActividadSalud_IdAndEstadoAndFechaHoraAfter(
-                        actividadId, EstadoRecordatorio.PENDIENTE, LocalDateTime.now(ZONA_VITA));
+                        actividad.getId(), EstadoRecordatorio.PENDIENTE, LocalDateTime.now(ZONA_VITA));
         if (!pendientesFuturos.isEmpty()) {
             pendientesFuturos.forEach(recordatorio -> recordatorio.setEstado(EstadoRecordatorio.CANCELADO));
             recordatorioRepository.saveAll(pendientesFuturos);
+        }
+    }
+
+     /**
+     * Las actividades del calendario representan compromisos futuros.
+     * Se acepta únicamente una fecha/hora estrictamente posterior al instante actual.
+     */
+    private void validarFechaHoraFutura(LocalDateTime fechaHora) {
+        if (fechaHora == null) {
+            return; // @NotNull se encarga de la petición HTTP; protege también llamadas internas.
+        }
+        if (!fechaHora.isAfter(LocalDateTime.now(ZONA_VITA))) {
+            throw new BusinessException("La fecha y hora de la actividad deben ser futuras");
         }
     }
 

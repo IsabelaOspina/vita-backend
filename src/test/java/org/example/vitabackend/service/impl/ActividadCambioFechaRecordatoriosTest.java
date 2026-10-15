@@ -35,7 +35,7 @@ class ActividadCambioFechaRecordatoriosTest {
     @InjectMocks private ActividadSaludServiceImpl service;
 
     @Test
-    void cambiarFechaCancelaLosRecordatoriosPendientesFuturos() {
+    void cambiarFechaReprogramaLosRecordatoriosPendientesFuturos() {
         String correo = "usuario@vita.test";
         Usuario usuario = Usuario.builder().id(10L).correo(correo).build();
         LocalDateTime anterior = LocalDateTime.now().plusDays(2).withNano(0);
@@ -64,7 +64,8 @@ class ActividadCambioFechaRecordatoriosTest {
 
         service.actualizar(correo, 7L, request);
 
-        assertEquals(EstadoRecordatorio.CANCELADO, recordatorio.getEstado());
+        assertEquals(EstadoRecordatorio.PENDIENTE, recordatorio.getEstado());
+        assertEquals(nueva.minusHours(2), recordatorio.getFechaHora());
         verify(recordatorioRepository).saveAll(List.of(recordatorio));
     }
 }
