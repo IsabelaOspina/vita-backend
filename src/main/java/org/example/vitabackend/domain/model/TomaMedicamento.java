@@ -11,7 +11,9 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "toma_medicamento")
+@Table(name = "toma_medicamento", uniqueConstraints = {
+        @UniqueConstraint(name = "uk_toma_horario_fecha", columnNames = {"horario_medicamento_id", "fecha_hora"})
+})
 public class TomaMedicamento {
 
     @Id
@@ -29,4 +31,7 @@ public class TomaMedicamento {
     @JoinColumn(name = "medicamento_id", nullable = false)
     private Medicamento medicamento;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "horario_medicamento_id")
+    private HorarioMedicamento horarioMedicamento;
 }

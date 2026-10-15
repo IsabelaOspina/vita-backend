@@ -14,13 +14,11 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface RecordatorioRepository extends JpaRepository<Recordatorio, Long> {
     List<Recordatorio> findByEstadoAndFechaHoraBefore(EstadoRecordatorio estado, LocalDateTime fecha);
-
-    /** Busca recordatorios pendientes futuros que deben cancelarse junto con una actividad. */
     List<Recordatorio> findByActividadSalud_IdAndEstadoAndFechaHoraAfter(
             Long actividadSaludId, EstadoRecordatorio estado, LocalDateTime fecha);
-
     List<Recordatorio> findByActividadSalud_IdAndActividadSalud_Usuario_IdOrderByFechaHoraAscIdAsc(
             Long actividadSaludId, Long usuarioId);
+    List<Recordatorio> findByTomaMedicamento_Id(Long tomaMedicamentoId);
 
     @Query("""
         select r from Recordatorio r
@@ -34,8 +32,7 @@ public interface RecordatorioRepository extends JpaRepository<Recordatorio, Long
         order by r.fechaHora asc, r.id asc
         """)
     List<Recordatorio> findAgendaByUsuarioIdAndIntervalo(
-            @Param("usuarioId") Long usuarioId,
-            @Param("desde") LocalDateTime desde,
+            @Param("usuarioId") Long usuarioId, @Param("desde") LocalDateTime desde,
             @Param("hasta") LocalDateTime hastaExclusivo);
 
     @Query("""
@@ -49,8 +46,5 @@ public interface RecordatorioRepository extends JpaRepository<Recordatorio, Long
           and (au.id = :usuarioId or mu.id = :usuarioId)
         """)
     Optional<Recordatorio> findPropioById(
-            @Param("recordatorioId") Long recordatorioId,
-            @Param("usuarioId") Long usuarioId);
-
-    List<Recordatorio> findByTomaMedicamento_Id(Long tomaMedicamentoId);
+            @Param("recordatorioId") Long recordatorioId, @Param("usuarioId") Long usuarioId);
 }

@@ -19,11 +19,17 @@ public class Medicamento {
     @Column(nullable = false)
     private String nombre;
 
+    @Column(length = 100)
     private String dosis;
 
+    @Column(length = 120)
     private String frecuencia;
 
     private String viaAdministracion;
+
+    @Builder.Default
+    @Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
+    private Boolean activo = true;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "usuario_id", nullable = false)

@@ -1,5 +1,5 @@
 package org.example.vitabackend.domain.enums;
 
 public enum EstadoTomaMed {
-    PENDIENTE, NOTIFICADO, TOMADO
+    PENDIENTE, NOTIFICADO, TOMADO, OMITIDO, CANCELADO
 }
