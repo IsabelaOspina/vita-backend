@@ -1,6 +1,8 @@
 package org.example.vitabackend.domain.model;
 
 import org.example.vitabackend.domain.enums.*;
+import org.hibernate.annotations.Check;
+
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import lombok.*;
@@ -12,6 +14,10 @@ import lombok.*;
 @Builder
 @Entity
 @Table(name = "recordatorio")
+@Check (name = "ck_recordatorio_un_solo_origen",
+        constraints = "((actividad_salud_id IS NOT NULL AND toma_medicamento_id IS NULL) OR " 
+        + "(actividad_salud_id IS NULL AND toma_medicamento_id IS NOT NULL))")
+
 public class Recordatorio {
 
     @Id

@@ -141,7 +141,19 @@ public class ActividadSaludServiceImpl implements ActividadSaludService {
             throw new BusinessException("No se puede modificar una actividad cancelada");
         }
 
+        LocalDateTime fechaHoraAnterior = actividad.getFechaHora();
         actividadSaludMapper.actualizarDesdeRequest(request, actividad);
+        if (!fechaHoraAnterior.equals(actividad.getFechaHora())) {
+            // Los recordatorios absoletos ya no son fiables tras cambiar fecha/hora de la actividad.
+            // Se cancelan los pendientes futuros y el móvil puede crear nuevos con los datos actualizados.
+            List<Recordatorio> recordatoriosFuturos = recordatorioRepository
+                    .findByActividadSalud_IdAndEstadoAndFechaHoraAfter(
+                            actividad.getId(), EstadoRecordatorio.PENDIENTE, LocalDateTime.now(ZONA_VITA));
+            if (!recordatoriosFuturos.isEmpty()) {
+                recordatoriosFuturos.forEach(r -> r.setEstado(EstadoRecordatorio.CANCELADO));
+                recordatorioRepository.saveAll(recordatoriosFuturos);
+            }
+        }
         return actividadSaludMapper.toResponse(actividadSaludRepository.save(actividad));
     }
 
