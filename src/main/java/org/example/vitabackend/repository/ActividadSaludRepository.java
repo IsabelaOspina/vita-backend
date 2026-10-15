@@ -23,5 +23,9 @@ public interface ActividadSaludRepository extends JpaRepository<ActividadSalud, 
     /** Impide recuperar o modificar por error actividades pertenecientes a otro usuario. */
     Optional<ActividadSalud> findByIdAndUsuario_Id(Long id, Long usuarioId);
 
+    /** Intervalo semiabierto [desde, hasta), evita problemas de precisión al cerrar día/semana/mes. */
+    List<ActividadSalud> findByUsuario_IdAndFechaHoraGreaterThanEqualAndFechaHoraLessThanOrderByFechaHoraAscIdAsc(
+            Long usuarioId, LocalDateTime desde, LocalDateTime hastaExclusivo);
+
 }
 

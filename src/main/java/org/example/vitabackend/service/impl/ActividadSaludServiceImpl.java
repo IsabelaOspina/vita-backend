@@ -1,7 +1,12 @@
 package org.example.vitabackend.service.impl;
 
+import java.time.DateTimeException;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.YearMonth;
 import java.time.ZoneId;
+import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.example.vitabackend.domain.enums.EstadoActividad;
@@ -69,6 +74,51 @@ public class ActividadSaludServiceImpl implements ActividadSaludService {
         Usuario usuario = obtenerUsuarioAutenticado(correoAutenticado);
         return actividadSaludRepository
                 .findByUsuario_IdAndFechaHoraBetweenOrderByFechaHoraAscIdAsc(usuario.getId(), desde, hasta)
+                .stream()
+                .map(actividadSaludMapper::toResponse)
+                .toList();
+    }
+
+    /** Consulta todas las actividades del día local indicado. */
+    @Override
+    public List<ActividadSaludResponse> listarPorDia(String correoAutenticado, LocalDate fecha) {
+        if (fecha == null) {
+            throw new BusinessException("Debe indicar la fecha que desea consultar");
+        }
+        LocalDateTime desde = fecha.atStartOfDay();
+        return listarPorPeriodo(correoAutenticado, desde, desde.plusDays(1));
+    }
+
+    /** Consulta la semana ISO (lunes a lunes, fin exclusivo) que contiene la fecha. */
+    @Override
+    public List<ActividadSaludResponse> listarPorSemana(String correoAutenticado, LocalDate fecha) {
+        if (fecha == null) {
+            throw new BusinessException("Debe indicar la fecha que desea consultar");
+        }
+        LocalDate lunes = fecha.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+        LocalDateTime desde = lunes.atStartOfDay();
+        return listarPorPeriodo(correoAutenticado, desde, desde.plusDays(7));
+    }
+
+    /** Consulta un mes calendario completo. mes debe estar entre 1 y 12. */
+    @Override
+    public List<ActividadSaludResponse> listarPorMes(String correoAutenticado, int anio, int mes) {
+        final YearMonth yearMonth;
+        try {
+            yearMonth = YearMonth.of(anio, mes);
+        } catch (DateTimeException ex) {
+            throw new BusinessException("El año o el mes indicado no es válido");
+        }
+        LocalDateTime desde = yearMonth.atDay(1).atStartOfDay();
+        return listarPorPeriodo(correoAutenticado, desde, desde.plusMonths(1));
+    }
+
+    private List<ActividadSaludResponse> listarPorPeriodo(
+            String correoAutenticado, LocalDateTime desde, LocalDateTime hastaExclusivo) {
+        Usuario usuario = obtenerUsuarioAutenticado(correoAutenticado);
+        return actividadSaludRepository
+                .findByUsuario_IdAndFechaHoraGreaterThanEqualAndFechaHoraLessThanOrderByFechaHoraAscIdAsc(
+                        usuario.getId(), desde, hastaExclusivo)
                 .stream()
                 .map(actividadSaludMapper::toResponse)
                 .toList();

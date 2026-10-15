@@ -1,5 +1,6 @@
 package org.example.vitabackend.service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import org.example.vitabackend.dto.request.ActividadSaludRequest;
@@ -13,6 +14,12 @@ public interface ActividadSaludService {
     List<ActividadSaludResponse> listar(String correoAutenticado);
 
     List<ActividadSaludResponse> listarPorRango(String correoAutenticado, LocalDateTime desde, LocalDateTime hasta);
+
+    List<ActividadSaludResponse> listarPorDia(String correoAutenticado, LocalDate fecha);
+
+    List<ActividadSaludResponse> listarPorSemana(String correoAutenticado, LocalDate fecha);
+
+    List<ActividadSaludResponse> listarPorMes(String correoAutenticado, int anio, int mes);
 
     ActividadSaludResponse obtener(String correoAutenticado, Long actividadId);
 

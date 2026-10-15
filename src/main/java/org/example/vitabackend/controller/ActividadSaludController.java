@@ -1,6 +1,8 @@
 package org.example.vitabackend.controller;
 
 import jakarta.validation.Valid;
+
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -53,6 +55,31 @@ public class ActividadSaludController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime hasta,
             Authentication authentication) {
         return actividadSaludService.listarPorRango(authentication.getName(), desde, hasta);
+    }
+
+    /** Consulta las actividades de un día específico: fecha=yyyy-MM-dd. */
+    @GetMapping("/dia")
+    public List<ActividadSaludResponse> listarPorDia(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fecha,
+            Authentication authentication) {
+        return actividadSaludService.listarPorDia(authentication.getName(), fecha);
+    }
+
+    /** Consulta la semana de lunes a domingo que contiene la fecha proporcionada. */
+    @GetMapping("/semana")
+    public List<ActividadSaludResponse> listarPorSemana(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fecha,
+            Authentication authentication) {
+        return actividadSaludService.listarPorSemana(authentication.getName(), fecha);
+    }
+
+    /** Consulta un mes calendario: anio=2026&mes=10. */
+    @GetMapping("/mes")
+    public List<ActividadSaludResponse> listarPorMes(
+            @RequestParam int anio,
+            @RequestParam int mes,
+            Authentication authentication) {
+        return actividadSaludService.listarPorMes(authentication.getName(), anio, mes);
     }
 
     @GetMapping("/{id}")
