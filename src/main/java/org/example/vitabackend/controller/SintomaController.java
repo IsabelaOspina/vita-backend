@@ -9,6 +9,7 @@ import org.example.vitabackend.domain.enums.OrdenSintoma;
 import org.example.vitabackend.dto.request.SintomaActualizarRequest;
 import org.example.vitabackend.dto.request.SintomaFiltro;
 import org.example.vitabackend.dto.request.SintomaRequest;
+import org.example.vitabackend.dto.response.MensajeResponse;
 import org.example.vitabackend.dto.response.PaginaResponse;
 import org.example.vitabackend.dto.response.SintomaEvolucionResponse;
 import org.example.vitabackend.dto.response.SintomaResponse;
@@ -65,9 +66,9 @@ public class SintomaController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
+    public MensajeResponse eliminar(@PathVariable Long id) {
         sintomaService.eliminar(usuarioActual.id(), id);
-        return ResponseEntity.noContent().build();
+        return MensajeResponse.ok("El síntoma se eliminó correctamente");
     }
 
     /** Indicadores del periodo (por defecto, últimos 30 días). */
