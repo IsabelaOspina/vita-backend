@@ -1,7 +1,7 @@
 package org.example.vitabackend.security.impl;
 
 import lombok.RequiredArgsConstructor;
-import org.example.vitabackend.domain.model.Usuario;
+import org.example.vitabackend.security.Credenciales;
 import org.example.vitabackend.repository.UsuarioRepository;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -18,14 +18,15 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     // Spring Security llama a este metodo al autenticar; aquí el "username" es el correo.
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        Usuario usuario = usuarioRepository.findByCorreo(email)
+        // Se traen solo los datos de acceso (una consulta corta): esto se ejecuta en cada petición de la app
+        Credenciales usuario = usuarioRepository.findCredencialesByCorreo(email)
                 .orElseThrow(() -> new UsernameNotFoundException("Usuario con email " + email + " no encontrado"));
 
         return User.builder()
-                .username(usuario.getCorreo())
-                .password(usuario.getContrasena())
-                .roles(usuario.getRol().name()) // genera la autoridad ROLE_ADMIN o ROLE_USUARIO
-                .disabled(!Boolean.TRUE.equals(usuario.getActivo()))
+                .username(usuario.correo())
+                .password(usuario.contrasena())
+                .roles(usuario.rol().name()) // genera la autoridad ROLE_ADMIN o ROLE_USUARIO
+                .disabled(!Boolean.TRUE.equals(usuario.activo()))
                 .build();
     }
 }
