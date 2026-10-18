@@ -40,7 +40,7 @@ public class MedicamentoServiceImpl implements MedicamentoService {
     public MedicamentoResponse crear(String correo, MedicamentoRequest request) {
         Usuario usuario = usuario(correo);
         Medicamento medicamento = Medicamento.builder().nombre(request.nombre().trim())
-                .dosis(limpiar(request.dosis())).frecuencia(limpiar(request.frecuencia()))
+                .dosis(limpiar(request.dosis()))
                 .viaAdministracion(limpiar(request.viaAdministracion())).usuario(usuario).activo(true).build();
         return response(medicamentoRepository.save(medicamento));
     }
@@ -66,7 +66,6 @@ public class MedicamentoServiceImpl implements MedicamentoService {
         if (!Boolean.TRUE.equals(m.getActivo())) throw new BusinessException("El medicamento está inactivo");
         m.setNombre(request.nombre().trim());
         m.setDosis(limpiar(request.dosis()));
-        m.setFrecuencia(limpiar(request.frecuencia()));
         m.setViaAdministracion(limpiar(request.viaAdministracion()));
         return response(medicamentoRepository.save(m));
     }
@@ -108,7 +107,7 @@ public class MedicamentoServiceImpl implements MedicamentoService {
     }
     private String limpiar(String s) { return s == null || s.isBlank() ? null : s.trim(); }
     private MedicamentoResponse response(Medicamento m) {
-        return new MedicamentoResponse(m.getId(), m.getNombre(), m.getDosis(), m.getFrecuencia(),
+        return new MedicamentoResponse(m.getId(), m.getNombre(), m.getDosis(),
                 m.getViaAdministracion(), m.getActivo());
     }
 }

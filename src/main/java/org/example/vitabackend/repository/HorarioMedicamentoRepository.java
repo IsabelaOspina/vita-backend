@@ -13,4 +13,5 @@ public interface HorarioMedicamentoRepository extends JpaRepository<HorarioMedic
     Optional<HorarioMedicamento> findByIdAndMedicamento_IdAndMedicamento_Usuario_Id(
             Long id, Long medicamentoId, Long usuarioId);
     List<HorarioMedicamento> findByActivoTrue();
+    List<HorarioMedicamento> findByActivoTrueAndMedicamento_Usuario_Id(Long usuarioId);
 }

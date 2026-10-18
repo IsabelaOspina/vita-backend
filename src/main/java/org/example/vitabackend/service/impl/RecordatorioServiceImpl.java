@@ -47,8 +47,9 @@ public class RecordatorioServiceImpl implements RecordatorioService {
         if (!request.fechaHora().isAfter(ahora)) {
             throw new BusinessException("El recordatorio debe programarse para una fecha y hora futura");
         }
-        if (!request.fechaHora().isBefore(actividad.getFechaHora())) {
-            throw new BusinessException("El recordatorio debe ocurrir antes de la actividad de salud");
+        // Puede ser antes de la actividad o a la misma hora, pero no después
+        if (request.fechaHora().isAfter(actividad.getFechaHora())) {
+            throw new BusinessException("El recordatorio no puede programarse después de la actividad de salud");
         }
 
         Recordatorio recordatorio = Recordatorio.builder()

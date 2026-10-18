@@ -6,6 +6,7 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.example.vitabackend.dto.request.RecordatorioRequest;
 import org.example.vitabackend.dto.response.RecordatorioResponse;
+import org.example.vitabackend.service.HorarioMedicamentoService;
 import org.example.vitabackend.service.RecordatorioService;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class RecordatorioController {
     private final RecordatorioService recordatorioService;
+    private final HorarioMedicamentoService horarioService;
 
     @PostMapping("/api/actividades-salud/{actividadId}/recordatorios")
     public ResponseEntity<RecordatorioResponse> crearParaActividad(
@@ -40,6 +42,13 @@ public class RecordatorioController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime desde,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime hasta,
             Authentication authentication) {
+        // Antes de responder, se generan las tomas de medicamentos que falten en los próximos días
+        try {
+            horarioService.asegurarHorizonte(authentication.getName());
+        } catch (RuntimeException e) {
+            // Si dos consultas llegan al tiempo, una puede chocar con las tomas que crea la otra:
+            // no impide responder y se completa en la próxima consulta
+        }
         return recordatorioService.listarAgenda(authentication.getName(), desde, hasta);
     }
 

@@ -22,9 +22,6 @@ public class Medicamento {
     @Column(length = 100)
     private String dosis;
 
-    @Column(length = 120)
-    private String frecuencia;
-
     private String viaAdministracion;
 
     @Builder.Default

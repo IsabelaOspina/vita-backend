@@ -1,10 +1,13 @@
 package org.example.vitabackend.service.impl;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import lombok.RequiredArgsConstructor;
 import org.example.vitabackend.domain.enums.EstadoRecordatorio;
 import org.example.vitabackend.domain.enums.EstadoTomaMed;
@@ -28,7 +31,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@RequiredArgsConstructor 
+@RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class HorarioMedicamentoServiceImpl implements HorarioMedicamentoService {
     private static final ZoneId ZONA_VITA = ZoneId.of("America/Bogota");
@@ -39,6 +42,9 @@ public class HorarioMedicamentoServiceImpl implements HorarioMedicamentoService 
     private final RecordatorioRepository recordatorioRepository;
     private final UsuarioRepository usuarioRepository;
     private final TomaMedicamentoOccurrenceCalculator calculator;
+
+    /** Último día en que se revisó el horizonte de tomas de cada usuario (ver asegurarHorizonte). */
+    private final Map<Long, LocalDate> horizonteRevisado = new ConcurrentHashMap<>();
 
     @Override
     @Transactional
@@ -96,7 +102,7 @@ public class HorarioMedicamentoServiceImpl implements HorarioMedicamentoService 
 
     @Override
     public List<TomaMedicamentoResponse> listarTomas(String correo, Long medicamentoId, Long horarioId,
-            LocalDateTime desde, LocalDateTime hasta) {
+                                                     LocalDateTime desde, LocalDateTime hasta) {
         if (desde == null || hasta == null || !desde.isBefore(hasta)) {
             throw new BusinessException("El intervalo debe ser válido y la fecha inicial debe ser anterior a la final");
         }
@@ -107,6 +113,29 @@ public class HorarioMedicamentoServiceImpl implements HorarioMedicamentoService 
                 .orElseThrow(() -> new ResourceNotFoundException("Horario de medicamento no encontrado"));
         return tomaRepository.findByHorarioMedicamento_IdAndMedicamento_IdAndMedicamento_Usuario_IdAndFechaHoraGreaterThanEqualAndFechaHoraLessThanOrderByFechaHoraAscIdAsc(
                 horarioId, medicamentoId, u.getId(), desde, hasta).stream().map(this::response).toList();
+    }
+
+    @Override
+    public List<TomaMedicamentoResponse> listarTomasDelUsuario(String correo, LocalDateTime desde, LocalDateTime hasta) {
+        if (desde == null || hasta == null || !desde.isBefore(hasta)) {
+            throw new BusinessException("El intervalo debe ser válido y la fecha inicial debe ser anterior a la final");
+        }
+        Usuario u = usuario(correo);
+        return tomaRepository.findDelUsuarioEntre(u.getId(), desde, hasta).stream().map(this::response).toList();
+    }
+
+    @Override
+    @Transactional
+    public void asegurarHorizonte(String correo) {
+        Usuario u = usuario(correo);
+        LocalDate hoy = LocalDate.now(ZONA_VITA);
+        if (hoy.equals(horizonteRevisado.get(u.getId()))) return;
+        LocalDateTime desde = LocalDateTime.now(ZONA_VITA).withNano(0);
+        LocalDateTime hasta = desde.plusDays(HORIZONTE_DIAS);
+        for (HorarioMedicamento horario : horarioRepository.findByActivoTrueAndMedicamento_Usuario_Id(u.getId())) {
+            generarOcurrencias(horario, desde, hasta);
+        }
+        horizonteRevisado.put(u.getId(), hoy);
     }
 
     @Override
@@ -155,8 +184,10 @@ public class HorarioMedicamentoServiceImpl implements HorarioMedicamentoService 
     @Transactional
     public void generarOcurrencias(HorarioMedicamento horario, LocalDateTime desde, LocalDateTime hasta) {
         if (!Boolean.TRUE.equals(horario.getActivo()) || !Boolean.TRUE.equals(horario.getMedicamento().getActivo())) return;
+        // Las fechas que ya tienen toma se traen en una sola consulta, en vez de preguntar una por una
+        Set<LocalDateTime> existentes = new HashSet<>(tomaRepository.findFechasDeHorarioEntre(horario.getId(), desde, hasta));
         for (LocalDateTime fecha : calculator.calcular(horario, desde, hasta)) {
-            if (tomaRepository.existsByHorarioMedicamento_IdAndFechaHora(horario.getId(), fecha)) continue;
+            if (existentes.contains(fecha)) continue;
             TomaMedicamento toma = TomaMedicamento.builder().medicamento(horario.getMedicamento())
                     .horarioMedicamento(horario).fechaHora(fecha).estado(EstadoTomaMed.PENDIENTE).build();
             toma = tomaRepository.save(toma);
