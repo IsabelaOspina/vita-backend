@@ -7,8 +7,9 @@ import org.example.vitabackend.dto.request.RestablecerContrasenaRequest;
 public interface RecuperacionContrasenaService {
 
     /**
-     * Genera y envía un código si el correo pertenece a una cuenta activa. Siempre termina igual
-     * (exista o no el correo) para no revelar qué correos están registrados.
+     * Genera y envía un código al correo. Si el correo no está registrado responde 404 ("Este correo
+     * no está registrado en VITA"), si la cuenta está inactiva o ya se pidió un código hace menos de
+     * un minuto responde 400, para que la persona sepa qué pasó.
      */
     void solicitar(OlvideContrasenaRequest request);
 

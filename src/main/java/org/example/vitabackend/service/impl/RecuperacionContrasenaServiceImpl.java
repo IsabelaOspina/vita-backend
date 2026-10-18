@@ -11,6 +11,7 @@ import org.example.vitabackend.domain.model.Usuario;
 import org.example.vitabackend.dto.request.OlvideContrasenaRequest;
 import org.example.vitabackend.dto.request.RestablecerContrasenaRequest;
 import org.example.vitabackend.exception.BusinessException;
+import org.example.vitabackend.exception.ResourceNotFoundException;
 import org.example.vitabackend.repository.RecuperacionContrasenaRepository;
 import org.example.vitabackend.repository.UsuarioRepository;
 import org.example.vitabackend.service.CorreoService;
@@ -28,6 +29,9 @@ public class RecuperacionContrasenaServiceImpl implements RecuperacionContrasena
     static final int MAX_INTENTOS = 5;
     static final int SEGUNDOS_ENTRE_SOLICITUDES = 60;
     static final String CODIGO_INVALIDO = "El código es incorrecto o ya venció. Solicite uno nuevo";
+    static final String NO_REGISTRADO = "Este correo no está registrado en VITA";
+    static final String CUENTA_INACTIVA = "La cuenta asociada a este correo está inactiva. Comuníquese con el administrador";
+    static final String ESPERAR = "Ya le enviamos un código hace menos de un minuto. Revise su correo o espere un momento para pedir otro";
 
     private final UsuarioRepository usuarioRepository;
     private final RecuperacionContrasenaRepository recuperacionRepository;
@@ -40,12 +44,12 @@ public class RecuperacionContrasenaServiceImpl implements RecuperacionContrasena
     @Override
     @Transactional
     public void solicitar(OlvideContrasenaRequest request) {
-        Optional<Usuario> encontrado = usuarioRepository.findByCorreo(request.correo().trim());
-        // Correo desconocido o cuenta inactiva: no se hace nada y se responde igual que si existiera
-        if (encontrado.isEmpty() || !Boolean.TRUE.equals(encontrado.get().getActivo())) {
-            return;
+        // Se le dice a la persona si el correo no está registrado o si la cuenta está inactiva
+        Usuario usuario = usuarioRepository.findByCorreo(request.correo().trim())
+                .orElseThrow(() -> new ResourceNotFoundException(NO_REGISTRADO));
+        if (!Boolean.TRUE.equals(usuario.getActivo())) {
+            throw new BusinessException(CUENTA_INACTIVA);
         }
-        Usuario usuario = encontrado.get();
         LocalDateTime ahora = reloj.ahora();
 
         // Evita que alguien dispare correos sin parar: máximo uno por minuto
@@ -53,7 +57,7 @@ public class RecuperacionContrasenaServiceImpl implements RecuperacionContrasena
                 recuperacionRepository.findFirstByUsuario_IdOrderByIdDesc(usuario.getId());
         if (ultimo.isPresent()
                 && ultimo.get().getFechaCreacion().plusSeconds(SEGUNDOS_ENTRE_SOLICITUDES).isAfter(ahora)) {
-            return;
+            throw new BusinessException(ESPERAR);
         }
 
         // Un código nuevo anula los anteriores

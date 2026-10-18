@@ -24,12 +24,15 @@ public class AuthController {
         return authService.login(request);
     }
 
-    /** Paso 1: el usuario escribe su correo y le llega un código de 6 dígitos. */
+    /**
+     * Paso 1: el usuario escribe su correo y le llega un código de 6 dígitos.
+     * Si el correo no está registrado responde 404; si la cuenta está inactiva o pidió otro código
+     * hace menos de un minuto, 400.
+     */
     @PostMapping("/olvide-contrasena")
     public MensajeResponse olvideContrasena(@Valid @RequestBody OlvideContrasenaRequest request) {
         recuperacionService.solicitar(request);
-        // Mismo mensaje exista o no el correo (no se revela qué correos están registrados)
-        return MensajeResponse.ok("Si el correo está registrado, le enviamos un código para restablecer su contraseña");
+        return MensajeResponse.ok("Le enviamos un código de 6 dígitos a su correo para restablecer su contraseña");
     }
 
     /** Paso 2: correo + código + nueva contraseña. */
