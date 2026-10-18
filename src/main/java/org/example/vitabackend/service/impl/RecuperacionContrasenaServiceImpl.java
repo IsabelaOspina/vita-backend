@@ -75,12 +75,9 @@ public class RecuperacionContrasenaServiceImpl implements RecuperacionContrasena
                 .usado(false)
                 .build());
 
-        try {
-            correoService.enviarCodigoRecuperacion(usuario.getCorreo(), usuario.getNombre(), codigo, MINUTOS_VALIDEZ);
-        } catch (RuntimeException e) {
-            // No se le dice al cliente (respondería distinto según el correo); queda en el log
-            log.error("No se pudo enviar el código de recuperación a {}", usuario.getCorreo(), e);
-        }
+        // Si el correo no sale, se lanza BusinessException: se deshace todo (el código no queda guardado,
+        // así se puede volver a pedir sin esperar el minuto) y la persona ve que el correo no llegó
+        correoService.enviarCodigoRecuperacion(usuario.getCorreo(), usuario.getNombre(), codigo, MINUTOS_VALIDEZ);
     }
 
     /**
