@@ -11,6 +11,8 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
     Optional<Usuario> findByCorreo(String correo);
+    /** Para el inicio de sesión con Google: el correo de Google puede venir con otras mayúsculas. */
+    Optional<Usuario> findByCorreoIgnoreCase(String correo);
     boolean existsByCorreo(String correo);
     boolean existsByCedula(String cedula);
     boolean existsByRol(Rol rol);
