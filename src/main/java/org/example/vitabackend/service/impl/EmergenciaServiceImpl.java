@@ -75,7 +75,7 @@ public class EmergenciaServiceImpl implements EmergenciaService {
         try {
 
             inalambriaSmsService.enviarSms(
-                    contacto.getTelefono(),
+                    telefonoInternacional(contacto.getTelefono()),
                     mensaje
             );
 
@@ -209,6 +209,32 @@ public class EmergenciaServiceImpl implements EmergenciaService {
             case MEDICA -> "Emergencia medica";
             case OTRA -> "Otra emergencia";
         };
+    }
+
+    /**
+     * El SMS exige el número en formato internacional (+57...)
+     */
+    static String telefonoInternacional(String telefono) {
+
+        if (telefono == null) {
+            return null;
+        }
+
+        String numero = telefono.replaceAll("[\\s-]", "");
+
+        if (numero.startsWith("+")) {
+            return numero;
+        }
+
+        if (numero.length() == 10) {
+            return "+57" + numero;
+        }
+
+        if (numero.length() == 12 && numero.startsWith("57")) {
+            return "+" + numero;
+        }
+
+        return numero;
     }
 
     private String limpiarUbicacion(String ubicacion) {

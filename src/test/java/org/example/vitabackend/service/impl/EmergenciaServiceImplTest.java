@@ -1,4 +1,3 @@
-
 package org.example.vitabackend.service.impl;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -70,7 +69,8 @@ class EmergenciaServiceImplTest {
                 .contactoEmergencia(contacto)
                 .build();
 
-        when(usuarioActual.id()).thenReturn(USUARIO_ID);
+        // lenient: la prueba de telefonoInternacional no usa el usuario actual
+        lenient().when(usuarioActual.id()).thenReturn(USUARIO_ID);
     }
 
     private SolicitudEmergencia solicitud(EstadoEmergencia estado) {
@@ -303,5 +303,14 @@ class EmergenciaServiceImplTest {
         );
 
         verify(solicitudRepository, never()).save(any());
+    }
+
+    @Test
+    void telefonoInternacional_agregaIndicativoACelularesDeDiezDigitos() {
+        // Contactos registrados al crear la cuenta (sin +57) y desde la pantalla de contacto (con +57)
+        assertEquals("+573001234567", EmergenciaServiceImpl.telefonoInternacional("3001234567"));
+        assertEquals("+573001234567", EmergenciaServiceImpl.telefonoInternacional("+573001234567"));
+        assertEquals("+573001234567", EmergenciaServiceImpl.telefonoInternacional("300 123 4567"));
+        assertEquals("+573001234567", EmergenciaServiceImpl.telefonoInternacional("573001234567"));
     }
 }
