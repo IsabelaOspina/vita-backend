@@ -63,6 +63,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/api/usuarios/*").hasRole("ADMIN")
                         // Seguimiento de síntomas: solo pacientes, sobre sus propios datos
                         .requestMatchers("/api/sintomas/**").hasRole("USUARIO")
+                        // Gestión de emergencias: solo usuarios
+                        .requestMatchers("/api/emergencias/**").hasRole("USUARIO")
                         // Recomendaciones que el paciente recibe de su personal de salud
                         .requestMatchers("/api/recomendaciones/**").hasRole("USUARIO")
                         .anyRequest().authenticated())
