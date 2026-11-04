@@ -1,4 +1,3 @@
-
 package org.example.vitabackend.config;
 
 import lombok.Getter;

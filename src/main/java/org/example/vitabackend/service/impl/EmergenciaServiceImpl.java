@@ -6,8 +6,10 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 
 import org.example.vitabackend.domain.enums.EstadoEmergencia;
+import org.example.vitabackend.domain.enums.EstadoNotificacion;
 import org.example.vitabackend.domain.enums.TipoEmergencia;
 import org.example.vitabackend.domain.model.ContactoEmergencia;
+import org.example.vitabackend.domain.model.Notificacion;
 import org.example.vitabackend.domain.model.SolicitudEmergencia;
 import org.example.vitabackend.domain.model.Usuario;
 
@@ -17,6 +19,7 @@ import org.example.vitabackend.dto.response.SolicitudEmergenciaResponse;
 import org.example.vitabackend.exception.BusinessException;
 import org.example.vitabackend.exception.ResourceNotFoundException;
 
+import org.example.vitabackend.repository.NotificacionRepository;
 import org.example.vitabackend.repository.SolicitudEmergenciaRepository;
 import org.example.vitabackend.repository.UsuarioRepository;
 
@@ -37,6 +40,7 @@ public class EmergenciaServiceImpl implements EmergenciaService {
     private static final Logger logger =
             LoggerFactory.getLogger(EmergenciaServiceImpl.class);
     private final SolicitudEmergenciaRepository solicitudRepository;
+    private final NotificacionRepository notificacionRepository;
     private final UsuarioRepository usuarioRepository;
     private final UsuarioActual usuarioActual;
     private final InalambriaSmsService inalambriaSmsService;
@@ -72,6 +76,18 @@ public class EmergenciaServiceImpl implements EmergenciaService {
         // Construimos el mensaje que recibirá el contacto.
         String mensaje = construirMensaje(usuario, solicitud);
 
+        // Registramos la notificación
+        Notificacion notificacion = Notificacion.builder()
+                .fechaHora(LocalDateTime.now())
+                .mensaje(mensaje)
+                .estado(EstadoNotificacion.PENDIENTE)
+                .solicitudEmergencia(solicitud)
+                .contactoEmergencia(contacto)
+                .build();
+        
+        notificacion = notificacionRepository.save(notificacion);
+
+        // Realizar el envió mediante Inalambria
         try {
 
             inalambriaSmsService.enviarSms(
@@ -79,18 +95,25 @@ public class EmergenciaServiceImpl implements EmergenciaService {
                     mensaje
             );
 
-            logger.info("SMS enviado mediante Inalambria Express.");
-
+            // El proveedor aceptó la solicitud de envió
             solicitud.setEstado(EstadoEmergencia.ENVIADA);
+            notificacion.setEstado(EstadoNotificacion.ENVIADA);
+
+            logger.info("Solicitud de emergencia aceptada para envío SMS.", solicitud.getId());
 
         } catch (Exception e) {
 
-            logger.error("ERROR AL ENVIAR SMS CON INALAMBRIA", e);
-
+            // Se conserva el registro aunque falle el envío
             solicitud.setEstado(EstadoEmergencia.FALLIDA);
+            notificacion.setEstado(EstadoNotificacion.FALLIDA);  
+
+            logger.error("Falló el envío SMS de la solicitud", solicitud.getId(), e);
+            
         }
 
+        // Actualizamos ambos registros con el resultado final
         solicitud = solicitudRepository.save(solicitud);
+        notificacionRepository.save(notificacion);
 
         return convertirRespuesta(solicitud);
     }

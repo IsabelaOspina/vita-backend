@@ -24,6 +24,7 @@ public class SolicitudEmergencia {
     @Enumerated(EnumType.STRING)
     private TipoEmergencia tipo;
 
+    @Column(length = 500)
     private String ubicacion;
 
     @Enumerated(EnumType.STRING)
