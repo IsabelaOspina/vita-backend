@@ -16,11 +16,11 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
     Optional<Usuario> findByCorreo(String correo);
 
     /**
-     * Solo correo, contraseña, rol y estado, en una consulta. La usa la seguridad en cada petición:
+     * Solo correo, contraseña, rol, estado y version del token, en una consulta. La usa la seguridad en cada petición:
      * cargar la cuenta completa traía además su configuración de accesibilidad y sus datos de
      * personal de salud (consultas extra que hacían más lenta cada pantalla).
      */
-    @Query("select new org.example.vitabackend.security.Credenciales(u.correo, u.contrasena, u.rol, u.activo) "
+    @Query("select new org.example.vitabackend.security.Credenciales(u.correo, u.contrasena, u.rol, u.activo, u.versionToken) "
             + "from Usuario u where u.correo = :correo")
     Optional<Credenciales> findCredencialesByCorreo(@Param("correo") String correo);
     boolean existsByCorreo(String correo);

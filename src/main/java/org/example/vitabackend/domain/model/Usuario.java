@@ -41,6 +41,10 @@ public class Usuario {
 
     private String direccion;
 
+    @Column(name = "version_token", nullable = false)
+    @Builder.Default
+    private Long versionToken = 0L;
+
     @Builder.Default
     private Boolean activo = true;
 

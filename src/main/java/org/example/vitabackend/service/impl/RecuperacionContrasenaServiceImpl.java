@@ -107,7 +107,16 @@ public class RecuperacionContrasenaServiceImpl implements RecuperacionContrasena
             throw new BusinessException(CODIGO_INVALIDO);
         }
 
+        // Actualizamos la contraseña
         usuario.setContrasena(passwordEncoder.encode(request.contrasenaNueva()));
+
+        // Incrementamos la versión del token para invalidar todos los anteriores
+        usuario.setVersionToken(usuario.getVersionToken() + 1L);
+
+        // Guardamos los cambios del usuario
+        usuarioRepository.save(usuario);
+
+        // Marcamos el código de recuperación como utilizado
         recuperacion.setUsado(true);
     }
 }

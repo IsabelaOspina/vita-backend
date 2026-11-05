@@ -157,14 +157,25 @@ public class UsuarioServiceImpl implements UsuarioService {
         Usuario usuario = usuarioRepository.findByCorreo(correo)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
 
+        // Verificamos que la contraseña actual sea correcta
         if (!passwordEncoder.matches(request.contrasenaActual(), usuario.getContrasena())) {
             // 400 y no 401: un 401 haría que la app crea que la sesión expiró
             throw new BusinessException("La contraseña actual es incorrecta");
         }
+
+        // Evitamos que se reutilice la contraseña actual
         if (passwordEncoder.matches(request.contrasenaNueva(), usuario.getContrasena())) {
             throw new BusinessException("La nueva contraseña debe ser diferente a la actual");
         }
+
+        // Actualizamos la contraseña
         usuario.setContrasena(passwordEncoder.encode(request.contrasenaNueva()));
+
+        // Incrementar la versión del token para invalidar todos los tokens JWT anteriores
+        usuario.setVersionToken(usuario.getVersionToken() + 1L);
+
+        // Guardamos los cambios
+        usuarioRepository.save(usuario);
     }
 
     private void validarCorreoYCedulaUnicos(String correo, String cedula) {
