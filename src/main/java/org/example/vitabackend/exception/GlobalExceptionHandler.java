@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.example.vitabackend.exception.CuentaBloqueadaException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -62,6 +64,17 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<Map<String, Object>> parametroInvalido(MethodArgumentTypeMismatchException ex) {
         return build(HttpStatus.BAD_REQUEST, "Valor inválido para el parámetro '" + ex.getName() + "'");
+    }
+
+    @ExceptionHandler(CuentaBloqueadaException.class)
+    public ResponseEntity<Map<String, Object>> cuentaBloqueada(CuentaBloqueadaException ex) {
+        HttpStatus status = HttpStatus.TOO_MANY_REQUESTS;
+
+        Map<String, Object> body = base(status, ex.getMessage());
+
+        body.put("segundosRestantes", ex.getSegundosRestantes());
+
+        return ResponseEntity.status(status).header(HttpHeaders.RETRY_AFTER, String.valueOf(ex.getSegundosRestantes())).body(body);
     }
 
     private ResponseEntity<Map<String, Object>> build(HttpStatus status, String msg) {

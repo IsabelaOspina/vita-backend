@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.time.LocalDateTime;
 import lombok.*;
 import org.example.vitabackend.domain.enums.Rol;
 import org.hibernate.annotations.ColumnDefault;
@@ -44,6 +45,17 @@ public class Usuario {
     @Column(name = "version_token", nullable = false)
     @Builder.Default
     private Long versionToken = 0L;
+
+    @Column(name = "intentos_fallidos_login", nullable = false)
+    @Builder.Default
+    private Integer intentosFallidosLogin = 0;
+
+    @Column(name = "nivel_bloqueo_login", nullable = false)
+    @Builder.Default
+    private Integer nivelBloqueoLogin = 0;
+
+    @Column(name = "bloqueado_hasta")
+    private LocalDateTime bloqueadoHasta;
 
     @Builder.Default
     private Boolean activo = true;
