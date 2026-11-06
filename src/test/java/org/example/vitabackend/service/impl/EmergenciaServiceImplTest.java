@@ -9,6 +9,7 @@ import static org.mockito.Mockito.*;
 
 import java.util.List;
 import java.util.Optional;
+import java.math.BigDecimal;
 
 import org.example.vitabackend.domain.enums.EstadoEmergencia;
 import org.example.vitabackend.domain.enums.TipoEmergencia;
@@ -109,7 +110,9 @@ class EmergenciaServiceImplTest {
         SolicitudEmergenciaResponse respuesta = emergenciaService.solicitar(
                 new SolicitudEmergenciaRequest(
                         TipoEmergencia.MEDICA,
-                        "Armenia, Quindío"
+                        "Armenia, Quindío",
+                        new BigDecimal("4.5339"),
+                        new BigDecimal("-75.6811")
                 )
         );
 
@@ -140,7 +143,12 @@ class EmergenciaServiceImplTest {
 
         assertThrows(BusinessException.class, () ->
                 emergenciaService.solicitar(
-                        new SolicitudEmergenciaRequest(TipoEmergencia.MEDICA, null)
+                        new SolicitudEmergenciaRequest(
+                                TipoEmergencia.MEDICA, 
+                                null,
+                                null,
+                                null
+                        )
                 )
         );
 
@@ -168,7 +176,12 @@ class EmergenciaServiceImplTest {
                 .enviarSms(anyString(), anyString());
 
         SolicitudEmergenciaResponse respuesta = emergenciaService.solicitar(
-                new SolicitudEmergenciaRequest(TipoEmergencia.MEDICA, null)
+                new SolicitudEmergenciaRequest(
+                        TipoEmergencia.MEDICA, 
+                        null,
+                        null,
+                        null
+                )
         );
 
         assertEquals(EstadoEmergencia.FALLIDA, respuesta.estado());
@@ -195,7 +208,9 @@ class EmergenciaServiceImplTest {
         SolicitudEmergenciaResponse respuesta = emergenciaService.solicitar(
                 new SolicitudEmergenciaRequest(
                         TipoEmergencia.ACCIDENTE,
-                        "  Armenia, Quindío  "
+                        "  Armenia, Quindío  ",
+                        new BigDecimal("4.5339"),
+                        new BigDecimal("-75.6811")
                 )
         );
 
@@ -218,7 +233,12 @@ class EmergenciaServiceImplTest {
                 .thenAnswer(invocacion -> invocacion.getArgument(0));
 
         SolicitudEmergenciaResponse respuesta = emergenciaService.solicitar(
-                new SolicitudEmergenciaRequest(TipoEmergencia.OTRA, "  ")
+                new SolicitudEmergenciaRequest(
+                        TipoEmergencia.OTRA, 
+                        "  ",
+                        null,
+                        null
+                )
         );
 
         assertNull(respuesta.ubicacion());

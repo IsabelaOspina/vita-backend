@@ -3,6 +3,7 @@ package org.example.vitabackend.domain.model;
 import org.example.vitabackend.domain.enums.*;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.math.BigDecimal;
 import lombok.*;
 
 @Getter
@@ -26,6 +27,12 @@ public class SolicitudEmergencia {
 
     @Column(length = 500)
     private String ubicacion;
+
+    @Column(name = "latitud", precision = 12, scale = 9)
+    private BigDecimal latitud;
+
+    @Column(name = "longitud", precision = 12, scale = 9)
+    private BigDecimal longitud;
 
     @Enumerated(EnumType.STRING)
     @Builder.Default

@@ -1,5 +1,6 @@
 package org.example.vitabackend.service.impl;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -39,6 +40,7 @@ public class EmergenciaServiceImpl implements EmergenciaService {
 
     private static final Logger logger =
             LoggerFactory.getLogger(EmergenciaServiceImpl.class);
+    private static final String URL_MAPA = "https://maps.google.com/?q=";
     private final SolicitudEmergenciaRepository solicitudRepository;
     private final NotificacionRepository notificacionRepository;
     private final UsuarioRepository usuarioRepository;
@@ -50,6 +52,8 @@ public class EmergenciaServiceImpl implements EmergenciaService {
     public SolicitudEmergenciaResponse solicitar(
             SolicitudEmergenciaRequest request
     ) {
+        // Comprobamos que las coordenadas estén completas y dentro de rango
+        validarCoordenadas(request.latitud(), request.longitud());
 
         Usuario usuario = buscarUsuario();
 
@@ -66,6 +70,8 @@ public class EmergenciaServiceImpl implements EmergenciaService {
                 .fechaHora(LocalDateTime.now())
                 .tipo(request.tipo())
                 .ubicacion(limpiarUbicacion(request.ubicacion()))
+                .latitud(request.latitud())
+                .longitud(request.longitud())
                 .estado(EstadoEmergencia.PENDIENTE)
                 .usuario(usuario)
                 .contactoEmergencia(contacto)
@@ -99,7 +105,7 @@ public class EmergenciaServiceImpl implements EmergenciaService {
             solicitud.setEstado(EstadoEmergencia.ENVIADA);
             notificacion.setEstado(EstadoNotificacion.ENVIADA);
 
-            logger.info("Solicitud de emergencia aceptada para envío SMS.", solicitud.getId());
+            logger.info("Solicitud de emergencia {} aceptada para envío SMS.", solicitud.getId());
 
         } catch (Exception e) {
 
@@ -107,7 +113,7 @@ public class EmergenciaServiceImpl implements EmergenciaService {
             solicitud.setEstado(EstadoEmergencia.FALLIDA);
             notificacion.setEstado(EstadoNotificacion.FALLIDA);  
 
-            logger.error("Falló el envío SMS de la solicitud", solicitud.getId(), e);
+            logger.error("Falló el envío SMS de la solicitud {}.", solicitud.getId(), e);
             
         }
 
@@ -178,6 +184,25 @@ public class EmergenciaServiceImpl implements EmergenciaService {
         );
     }
 
+    private void validarCoordenadas(BigDecimal latitud, BigDecimal longitud) {
+        // Las dos coordenadas deben enviarse juntas o ambas deben ser nulas
+        if((latitud == null) != (longitud == null)) {
+            throw new BusinessException("Debe proporcionar tanto la latitud como la longitud");
+        }
+
+        if(latitud == null) {
+            return;
+        }
+
+        if(latitud.compareTo(BigDecimal.valueOf(-90)) < 0 || latitud.compareTo(BigDecimal.valueOf(90)) > 0) {
+            throw new BusinessException("La latitud debe estar entre -90 y 90");
+        } 
+
+        if(longitud.compareTo(BigDecimal.valueOf(-180)) < 0 || longitud.compareTo(BigDecimal.valueOf(180)) > 0) {
+            throw new BusinessException("La latitud debe estar entre -180 y 180");
+        } 
+    }
+
     private Usuario buscarUsuario() {
 
         return usuarioRepository.findById(usuarioActual.id())
@@ -212,11 +237,23 @@ public class EmergenciaServiceImpl implements EmergenciaService {
         mensaje.append(describirTipo(solicitud.getTipo()));
         mensaje.append(". ");
 
+        // Ubicación automática o manual
         if (solicitud.getUbicacion() != null
                 && !solicitud.getUbicacion().isBlank()) {
 
             mensaje.append("Ubicacion: ");
             mensaje.append(solicitud.getUbicacion());
+            mensaje.append(". ");
+        }
+
+        // Enlace directo al mapa cuando existen coordenadas
+        if (solicitud.getLatitud() != null && solicitud.getLongitud() != null) {
+
+            mensaje.append("Mapa: ");
+            mensaje.append(URL_MAPA);
+            mensaje.append(solicitud.getLatitud().toPlainString());
+            mensaje.append(",");
+            mensaje.append(solicitud.getLongitud().toPlainString());
             mensaje.append(". ");
         }
 
@@ -282,7 +319,9 @@ public class EmergenciaServiceImpl implements EmergenciaService {
                 solicitud.getUbicacion(),
                 solicitud.getEstado(),
                 contacto != null ? contacto.getNombre() : null,
-                contacto != null ? contacto.getTelefono() : null
+                contacto != null ? contacto.getTelefono() : null,
+                solicitud.getLatitud(),
+                solicitud.getLongitud()
         );
     }
 }
