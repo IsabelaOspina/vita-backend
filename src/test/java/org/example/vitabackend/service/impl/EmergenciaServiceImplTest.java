@@ -3,21 +3,26 @@ package org.example.vitabackend.service.impl;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.contains;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 import java.util.List;
 import java.util.Optional;
+import java.math.BigDecimal;
 
 import org.example.vitabackend.domain.enums.EstadoEmergencia;
 import org.example.vitabackend.domain.enums.TipoEmergencia;
 import org.example.vitabackend.domain.model.ContactoEmergencia;
 import org.example.vitabackend.domain.model.SolicitudEmergencia;
+import org.example.vitabackend.domain.model.Notificacion;
 import org.example.vitabackend.domain.model.Usuario;
 import org.example.vitabackend.dto.request.SolicitudEmergenciaRequest;
 import org.example.vitabackend.dto.response.SolicitudEmergenciaResponse;
 import org.example.vitabackend.exception.BusinessException;
 import org.example.vitabackend.exception.ResourceNotFoundException;
 import org.example.vitabackend.repository.SolicitudEmergenciaRepository;
+import org.example.vitabackend.repository.NotificacionRepository;
 import org.example.vitabackend.repository.UsuarioRepository;
 import org.example.vitabackend.security.UsuarioActual;
 import org.example.vitabackend.service.InalambriaSmsService;
@@ -37,6 +42,9 @@ class EmergenciaServiceImplTest {
 
     @Mock
     private SolicitudEmergenciaRepository solicitudRepository;
+
+    @Mock
+    private NotificacionRepository notificacionRepository;
 
     @Mock
     private UsuarioRepository usuarioRepository;
@@ -95,11 +103,16 @@ class EmergenciaServiceImplTest {
                     solicitud.setId(SOLICITUD_ID);
                     return solicitud;
                 });
+        
+        when(notificacionRepository.save(any(Notificacion.class)))
+                .thenAnswer(invocacion -> invocacion.getArgument(0));
 
         SolicitudEmergenciaResponse respuesta = emergenciaService.solicitar(
                 new SolicitudEmergenciaRequest(
                         TipoEmergencia.MEDICA,
-                        "Armenia, Quindío"
+                        "Armenia, Quindío",
+                        new BigDecimal("4.5339"),
+                        new BigDecimal("-75.6811")
                 )
         );
 
@@ -113,7 +126,12 @@ class EmergenciaServiceImplTest {
                 eq("+573001234567"),
                 contains("Armenia, Quindío")
         );
-        verify(solicitudRepository, times(2)).save(any(SolicitudEmergencia.class));
+
+        verify(solicitudRepository, times(2))
+                .save(any(SolicitudEmergencia.class));
+
+        verify(notificacionRepository, times(2))
+                .save(any(Notificacion.class));
     }
 
     @Test
@@ -125,7 +143,12 @@ class EmergenciaServiceImplTest {
 
         assertThrows(BusinessException.class, () ->
                 emergenciaService.solicitar(
-                        new SolicitudEmergenciaRequest(TipoEmergencia.MEDICA, null)
+                        new SolicitudEmergenciaRequest(
+                                TipoEmergencia.MEDICA, 
+                                null,
+                                null,
+                                null
+                        )
                 )
         );
 
@@ -144,18 +167,27 @@ class EmergenciaServiceImplTest {
                     solicitud.setId(SOLICITUD_ID);
                     return solicitud;
                 });
+        
+        when(notificacionRepository.save(any(Notificacion.class)))
+                .thenAnswer(invocacion -> invocacion.getArgument(0));
 
         doThrow(new RuntimeException("Error de Inalambria"))
                 .when(inalambriaSmsService)
                 .enviarSms(anyString(), anyString());
 
         SolicitudEmergenciaResponse respuesta = emergenciaService.solicitar(
-                new SolicitudEmergenciaRequest(TipoEmergencia.MEDICA, null)
+                new SolicitudEmergenciaRequest(
+                        TipoEmergencia.MEDICA, 
+                        null,
+                        null,
+                        null
+                )
         );
 
         assertEquals(EstadoEmergencia.FALLIDA, respuesta.estado());
 
         verify(solicitudRepository, times(2)).save(any(SolicitudEmergencia.class));
+        verify(notificacionRepository, times(2)).save(any(Notificacion.class));
     }
 
     @Test
@@ -169,11 +201,16 @@ class EmergenciaServiceImplTest {
                     solicitud.setId(SOLICITUD_ID);
                     return solicitud;
                 });
+        
+        when(notificacionRepository.save(any(Notificacion.class)))
+                .thenAnswer(invocacion -> invocacion.getArgument(0));
 
         SolicitudEmergenciaResponse respuesta = emergenciaService.solicitar(
                 new SolicitudEmergenciaRequest(
                         TipoEmergencia.ACCIDENTE,
-                        "  Armenia, Quindío  "
+                        "  Armenia, Quindío  ",
+                        new BigDecimal("4.5339"),
+                        new BigDecimal("-75.6811")
                 )
         );
 
@@ -192,8 +229,16 @@ class EmergenciaServiceImplTest {
                     return solicitud;
                 });
 
+        when(notificacionRepository.save(any(Notificacion.class)))
+                .thenAnswer(invocacion -> invocacion.getArgument(0));
+
         SolicitudEmergenciaResponse respuesta = emergenciaService.solicitar(
-                new SolicitudEmergenciaRequest(TipoEmergencia.OTRA, "  ")
+                new SolicitudEmergenciaRequest(
+                        TipoEmergencia.OTRA, 
+                        "  ",
+                        null,
+                        null
+                )
         );
 
         assertNull(respuesta.ubicacion());

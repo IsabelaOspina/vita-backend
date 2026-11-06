@@ -2,8 +2,9 @@ package org.example.vitabackend.security.impl;
 
 import lombok.RequiredArgsConstructor;
 import org.example.vitabackend.security.Credenciales;
+import org.example.vitabackend.security.UsuarioPrincipal;
 import org.example.vitabackend.repository.UsuarioRepository;
-import org.springframework.security.core.userdetails.User;
+
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -22,11 +23,11 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         Credenciales usuario = usuarioRepository.findCredencialesByCorreo(email)
                 .orElseThrow(() -> new UsernameNotFoundException("Usuario con email " + email + " no encontrado"));
 
-        return User.builder()
-                .username(usuario.correo())
-                .password(usuario.contrasena())
-                .roles(usuario.rol().name()) // genera la autoridad ROLE_ADMIN o ROLE_USUARIO
-                .disabled(!Boolean.TRUE.equals(usuario.activo()))
-                .build();
+        return new UsuarioPrincipal(
+                usuario.correo(),
+                usuario.contrasena(),
+                usuario.rol(), // genera la autoridad ROLE_ADMIN o ROLE_USUARIO
+                usuario.activo(),
+                usuario.versionToken());
     }
 }

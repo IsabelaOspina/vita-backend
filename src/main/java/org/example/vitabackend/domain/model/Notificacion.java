@@ -21,6 +21,7 @@ public class Notificacion {
     @Column(nullable = false)
     private LocalDateTime fechaHora;
 
+    @Column(columnDefinition = "TEXT")
     private String mensaje;
 
     @Enumerated(EnumType.STRING)

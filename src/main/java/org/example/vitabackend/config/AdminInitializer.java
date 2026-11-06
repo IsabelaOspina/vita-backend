@@ -14,6 +14,7 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import org.example.vitabackend.validation.PoliticaContrasena;
 
 /**
  * Crea el administrador del sistema al arrancar la aplicación, si todavía no existe.
@@ -45,8 +46,9 @@ public class AdminInitializer implements ApplicationRunner {
             log.warn("No se creó el administrador: configure vita.admin.correo y vita.admin.contrasena");
             return;
         }
-        if (contrasena.length() < 8) {
-            log.warn("No se creó el administrador: la contraseña debe tener al menos 8 caracteres");
+
+        if (!PoliticaContrasena.cumple(contrasena)) {
+            log.warn("No se creó el administrador porque la contraseña no cumple la política de seguridad definida");
             return;
         }
 

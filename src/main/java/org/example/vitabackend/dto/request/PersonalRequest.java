@@ -4,6 +4,7 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import org.example.vitabackend.validation.ContrasenaValida;
 
 /**
  * Datos para que el administrador registre a un profesional de la salud.
@@ -19,7 +20,9 @@ public record PersonalRequest(
         )
         String nombre,
         @NotBlank @Email String correo,
-        @NotBlank @Size(min = 8, message = "La contraseña debe tener al menos 8 caracteres") String contrasena,
+        @NotBlank (message = "La contraseña es obligatorio") 
+        @ContrasenaValida 
+        String contrasena,
         @Pattern(regexp = "\\d{10}", message = "El teléfono debe tener exactamente 10 dígitos y solo números") String telefono,
         @NotBlank(message = "La especialidad es obligatoria")
         @Size(max = 100, message = "La especialidad admite máximo 100 caracteres") String especialidad,

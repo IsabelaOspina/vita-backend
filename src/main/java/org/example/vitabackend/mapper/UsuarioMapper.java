@@ -25,6 +25,9 @@ public interface UsuarioMapper {
     @Mapping(target = "rol", ignore = true)
     @Mapping(target = "configuracionAccesibilidad", ignore = true)
     @Mapping(target = "personalSalud", ignore = true)
+    @Mapping(target = "aceptaTratamientoDatosPersonales", ignore = true)
+    @Mapping(target = "fechaAceptacionDatosPersonales", ignore = true)
+    @Mapping(target = "versionPoliticaTratamiento", ignore = true)
     Usuario toEntity(UsuarioRequest request);
 
     @Mapping(target = "id", ignore = true)
