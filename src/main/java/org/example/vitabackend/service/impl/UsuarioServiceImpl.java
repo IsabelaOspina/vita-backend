@@ -22,6 +22,7 @@ import org.example.vitabackend.repository.PersonalSaludRepository;
 import org.example.vitabackend.repository.UsuarioRepository;
 import org.example.vitabackend.service.ConfiguracionAccesibilidadFactory;
 import org.example.vitabackend.service.UsuarioService;
+import org.example.vitabackend.config.Reloj;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,10 +37,16 @@ public class UsuarioServiceImpl implements UsuarioService {
     private final UsuarioMapper usuarioMapper;
     private final PasswordEncoder passwordEncoder;
     private final ConfiguracionAccesibilidadFactory configuracionFactory;
+    private static final String VERSION_POLITICA_TRATAMIENTO = "1.0";
+    private final Reloj reloj;
 
     @Override
     @Transactional
     public UsuarioResponse crear(UsuarioRequest request) {
+        if(!Boolean.TRUE.equals(request.aceptaTratamientoDatosPersonales())) {
+            throw new BusinessException("Debe aceptar el tratamiento de sus datos personales para crear una cuenta");
+        }
+        
         validarCorreoYCedulaUnicos(request.correo(), request.cedula());
         validarDiscapacidadesSinRepetir(request.discapacidades());
 
@@ -48,6 +55,11 @@ public class UsuarioServiceImpl implements UsuarioService {
         usuario.setActivo(true);
         // El registro público siempre crea usuarios normales; nadie puede auto-asignarse ADMIN
         usuario.setRol(Rol.USUARIO);
+
+        // Registro de la aceptación de la política de tratamiento de datos personales
+        usuario.setAceptaTratamientoDatosPersonales(true);
+        usuario.setFechaAceptacionDatosPersonales(reloj.ahora());
+        usuario.setVersionPoliticaTratamiento(VERSION_POLITICA_TRATAMIENTO);
 
         // Contacto de emergencia (opcional): se guarda primero porque el usuario apunta a él
         if (usuario.getContactoEmergencia() != null) {

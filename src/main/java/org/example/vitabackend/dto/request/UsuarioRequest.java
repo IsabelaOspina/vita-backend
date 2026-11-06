@@ -8,6 +8,9 @@ import jakarta.validation.constraints.Past;
 import java.time.LocalDate;
 import java.util.List;
 
+import jakarta.validation.constraints.AssertTrue;
+import jakarta.validation.constraints.NotNull;
+
 import org.example.vitabackend.validation.ContrasenaValida;
 
 public record UsuarioRequest(
@@ -28,5 +31,8 @@ public record UsuarioRequest(
         String direccion,
         @Valid ContactoEmergenciaRequest contactoEmergencia,
         @Valid List<DiscapacidadRequest> discapacidades,
-        @Valid ConfiguracionAccesibilidadRequest configuracionAccesibilidad) {
+        @Valid ConfiguracionAccesibilidadRequest configuracionAccesibilidad,
+        @NotNull (message = "Debe indicar si acepta el tratamiento de datos personales")
+        @AssertTrue (message = "Debe aceptar el tratamiento de sus datos personales para crear una cuenta")
+        Boolean aceptaTratamientoDatosPersonales) {
 }
